@@ -1,4 +1,3 @@
-// utils/Config.ts
 import Constants from 'expo-constants';
 
 const extra = Constants.expoConfig?.extra ?? {};

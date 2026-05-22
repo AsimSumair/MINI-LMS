@@ -1,4 +1,3 @@
-// utils/security.ts
 import JailMonkey from 'jail-monkey';
 import * as Device from 'expo-device';
 import { Config } from './Config';

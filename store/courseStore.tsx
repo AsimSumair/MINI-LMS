@@ -1,14 +1,12 @@
-// store/courseStore.tsx
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Course } from '@/types';
 
-// ─── State shape ──────────────────────────────────────────────────────────────
 
 interface CourseState {
   courses:       Course[];
   bookmarks:     string[];
-  enrolled:      string[];   // ✅ added enrolled ids
+  enrolled:      string[];   
   isLoading:     boolean;
   isLoadingMore: boolean;
   error:         string | null;
@@ -22,8 +20,8 @@ type CourseAction =
   | { type: 'APPEND_COURSES';   payload: Course[] }
   | { type: 'SET_BOOKMARKS';    payload: string[] }
   | { type: 'TOGGLE_BOOKMARK';  payload: string }
-  | { type: 'SET_ENROLLED';     payload: string[] }   // ✅
-  | { type: 'TOGGLE_ENROLL';    payload: string }     // ✅
+  | { type: 'SET_ENROLLED';     payload: string[] }   
+  | { type: 'TOGGLE_ENROLL';    payload: string }    
   | { type: 'SET_LOADING';      payload: boolean }
   | { type: 'SET_LOADING_MORE'; payload: boolean }
   | { type: 'SET_ERROR';        payload: string | null }
@@ -41,7 +39,6 @@ const initialState: CourseState = {
   hasNextPage:   false,
 };
 
-// ─── Reducer ──────────────────────────────────────────────────────────────────
 
 function courseReducer(state: CourseState, action: CourseAction): CourseState {
   switch (action.type) {
@@ -102,7 +99,6 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
   }
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 
 const CourseContext = createContext<{
   state:          CourseState;
@@ -111,15 +107,13 @@ const CourseContext = createContext<{
   appendCourses:  (courses: Course[]) => void;
   toggleBookmark: (courseId: string) => Promise<void>;
   loadBookmarks:  () => Promise<void>;
-  toggleEnroll:   (courseId: string) => Promise<void>;   // ✅
-  loadEnrolled:   () => Promise<void>;                   // ✅
+  toggleEnroll:   (courseId: string) => Promise<void>;   
+  loadEnrolled:   () => Promise<void>;                   
   setLoading:     (loading: boolean) => void;
   setLoadingMore: (loading: boolean) => void;
   setError:       (error: string | null) => void;
   setPagination:  (p: { currentPage: number; totalPages: number; hasNextPage: boolean }) => void;
 } | null>(null);
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function CourseProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(courseReducer, initialState);
@@ -151,7 +145,6 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ✅ Enroll toggle — persisted to AsyncStorage
   const toggleEnroll = async (courseId: string) => {
     dispatch({ type: 'TOGGLE_ENROLL', payload: courseId });
     try {
@@ -164,7 +157,6 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ✅ Load enrolled from AsyncStorage on app start
   const loadEnrolled = async () => {
     try {
       const json = await AsyncStorage.getItem('enrolled');
@@ -193,8 +185,6 @@ export function CourseProvider({ children }: { children: ReactNode }) {
     </CourseContext.Provider>
   );
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCourses() {
   const ctx = useContext(CourseContext);

@@ -1,4 +1,3 @@
-// app/bookmarks.tsx or BookmarksScreen.tsx
 import { View, Text, FlatList } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useCourses } from '@/store/courseStore';
@@ -23,28 +22,20 @@ export default function BookmarksScreen() {
 
   useEffect(() => {
     loadBookmarks();
-
-    // FIX: if courses haven't been loaded yet (e.g. user navigated here directly),
-    // fetch them so bookmarkedCourses is never an empty list despite saved bookmark IDs.
     if (state.courses.length === 0) {
       fetchCourses({ page: 1, limit: 30 })
         .then((result) => setCourses(result.courses))
-        .catch(() => {/* silently ignore — UI still shows empty state */});
+        .catch(() => {});
     }
   }, []);
 
   const handleBookmarkToggle = async (courseId: string) => {
     const wasBookmarked = state.bookmarks.includes(courseId);
-
-    // FIX: compute newCount BEFORE the async toggleBookmark call so we
-    // never read a stale closure value of state.bookmarks after the await.
     const newCount = wasBookmarked
       ? state.bookmarks.length - 1
       : state.bookmarks.length + 1;
 
     await toggleBookmark(courseId);
-
-    // Trigger notification when reaching 5 or more bookmarks
     if (newCount >= 5 && !hasTriggeredNotification) {
       await scheduleBookmarkNotification(newCount);
       setHasTriggeredNotification(true);
@@ -59,7 +50,6 @@ export default function BookmarksScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {/* Header */}
       <View style={{
         backgroundColor: C.white,
         paddingTop: 56,

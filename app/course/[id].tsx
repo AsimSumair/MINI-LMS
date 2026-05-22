@@ -58,15 +58,12 @@ export default function CourseDetailScreen() {
     );
   }
 
-  // ── FIX: snapshot wasBookmarked and newCount BEFORE the async toggleBookmark
-  // call so we never read stale state after the await resolves.
   const handleBookmark = async () => {
     Animated.sequence([
       Animated.spring(bookmarkScale, { toValue: 1.4, useNativeDriver: true, speed: 30, bounciness: 18 }),
       Animated.spring(bookmarkScale, { toValue: 1,   useNativeDriver: true, speed: 30 }),
     ]).start();
 
-    // Snapshot BEFORE toggle — state.bookmarks changes after await
     const wasBookmarked = (state.bookmarks ?? []).includes(course.id);
     const newCount = wasBookmarked
       ? (state.bookmarks ?? []).length - 1
@@ -74,7 +71,6 @@ export default function CourseDetailScreen() {
 
     await toggleBookmark(course.id);
 
-    // Only notify when ADDING a bookmark (not removing), and only at 5+
     if (!wasBookmarked && newCount >= 5) {
       await scheduleBookmarkNotification(newCount);
     }
@@ -136,7 +132,6 @@ export default function CourseDetailScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
-      {/* ── Hero Image ── */}
       <View style={styles.imageContainer}>
         <Image source={{ uri: course.thumbnail }} style={styles.image} />
         <LinearGradient
@@ -178,7 +173,6 @@ export default function CourseDetailScreen() {
         )}
       </View>
 
-      {/* ── Content ── */}
       <View style={styles.content}>
         <Text style={styles.title}>{course.title}</Text>
 
@@ -275,7 +269,6 @@ export default function CourseDetailScreen() {
           ))}
         </View>
 
-        {/* ── Enroll Button ── */}
         <Animated.View style={[styles.enrollButton, { transform: [{ scale: enrollScale }] }]}>
           <TouchableOpacity onPress={handleEnroll} activeOpacity={0.9} disabled={isEnrolling}>
             <LinearGradient

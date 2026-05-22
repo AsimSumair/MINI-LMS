@@ -1,4 +1,3 @@
-// app/(tabs)/profile.tsx
 import {
   View, Text, TouchableOpacity,
   ScrollView, Alert, Image,
@@ -8,7 +7,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useNavigation, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/context/AuthContext'; // ✅ Fixed import
+import { useAuth } from '@/context/AuthContext';
 import { useCourses } from '@/store/courseStore';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,10 +34,8 @@ const C = {
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { user, logout } = useAuth(); // ✅ Fixed: destructure directly, no `state`
+  const { user, logout } = useAuth(); 
   const { state: courseState } = useCourses();
-  // ✅ Removed: const user = authState.user; — user comes directly from useAuth()
-
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');

@@ -1,4 +1,3 @@
-// utils/encryption.ts
 import * as ExpoCrypto from 'expo-crypto';
 import CryptoJS from 'crypto-js';
 import * as SecureStore from 'expo-secure-store';

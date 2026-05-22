@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx — Course Catalog
 import {
   View, Text, TextInput, TouchableOpacity,
   RefreshControl, ActivityIndicator,
@@ -19,7 +18,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 const { width } = Dimensions.get('window');
 const SB_HEIGHT = Platform.OS === 'android' ? (RNStatusBar.currentHeight ?? 24) : 0;
 
-/* ─── Design Tokens ───────────────────────────────────────────────────────── */
 const C = {
   bg: '#F8FAFC',
   white: '#FFFFFF',
@@ -36,7 +34,6 @@ const C = {
   border: '#E2E8F0',
 };
 
-/* ─── Categories ──────────────────────────────────────────────────────────── */
 const CATEGORIES = [
   { id: 'All', label: 'All', emoji: '🎯', query: undefined },
   { id: 'mens-watches', label: 'Men Watch', emoji: '⌚', query: 'mens-watches' },
@@ -46,7 +43,6 @@ const CATEGORIES = [
   { id: 'fragrances', label: 'Beauty', emoji: '🌸', query: 'fragrances' },
 ];
 
-/* ─── Helpers ─────────────────────────────────────────────────────────────── */
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -69,7 +65,6 @@ function getUserDisplayName(user: any): string {
   return 'Learner';
 }
 
-/* ─── HeroSection ─────────────────────────────────────────────────────────── */
 interface HeroProps {
   firstName: string;
   search: string;
@@ -145,7 +140,6 @@ const HeroSection = ({
   </LinearGradient>
 );
 
-/* ─── StatsSection ────────────────────────────────────────────────────────── */
 const StatsSection = ({
   courseCount, totalItems,
 }: { courseCount: number; totalItems: number }) => {
@@ -172,7 +166,6 @@ const StatsSection = ({
   );
 };
 
-/* ─── FeaturedSection ─────────────────────────────────────────────────────── */
 const FeaturedSection = ({
   courses, bookmarks, onBookmark,
 }: { courses: Course[]; bookmarks: string[]; onBookmark: (id: string) => void }) => (
@@ -202,7 +195,6 @@ const FeaturedSection = ({
   </View>
 );
 
-/* ─── CategoriesSection ───────────────────────────────────────────────────── */
 const CategoriesSection = ({
   selected, onSelect, courseCount,
 }: { selected: string; onSelect: (id: string) => void; courseCount: number }) => (
@@ -238,7 +230,6 @@ const CategoriesSection = ({
   </View>
 );
 
-/* ─── LoadMoreFooter ──────────────────────────────────────────────────────── */
 const LoadMoreFooter = ({
   isLoadingMore, hasNextPage,
 }: { isLoadingMore: boolean; hasNextPage: boolean }) => {
@@ -253,15 +244,11 @@ const LoadMoreFooter = ({
   );
 };
 
-/* ─── CourseItem — memoised render wrapper ──────────────────────────────────── */
 interface CourseItemProps {
   course: Course;
   onBookmark: (id: string) => void;
 }
 
-// FIX 1: CourseItem reads bookmarks live from the store instead of receiving
-// isBookmarked as a prop. This means LegendList's recycleItems can't serve a
-// stale icon — each item re-renders independently whenever bookmarks change.
 const CourseItem = memo(({ course, onBookmark }: CourseItemProps) => {
   const { state } = useCourses();
   return (
@@ -275,7 +262,6 @@ const CourseItem = memo(({ course, onBookmark }: CourseItemProps) => {
   );
 });
 
-/* ─── Main Screen ─────────────────────────────────────────────────────────── */
 export default function CoursesCatalog() {
   const {
     state,
@@ -294,27 +280,22 @@ export default function CoursesCatalog() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // ref guard — prevents duplicate infinite-scroll fetches
   const isFetchingMore = useRef(false);
 
-  // ref to the LegendList for programmatic scroll-to-top
   const listRef = useRef<any>(null);
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  /* ── Initial load ── */
   useEffect(() => {
     loadData(1, true);
     loadBookmarks();
     initializeNotifications();
   }, []);
 
-  /* ── Reload when category changes ── */
   useEffect(() => {
     loadData(1, true);
   }, [selectedCategory]);
 
-  /* ── Core fetch ── */
   const loadData = useCallback(async (page: number, replace: boolean) => {
     if (replace) setLoading(true);
     else setLoadingMore(true);
@@ -341,27 +322,21 @@ export default function CoursesCatalog() {
     }
   }, [selectedCategory]);
 
-  /* ── Pull-to-refresh ── */
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadData(1, true);
     setRefreshing(false);
   }, [loadData]);
 
-  /* ── Infinite scroll ── */
   const onEndReached = useCallback(() => {
     if (isFetchingMore.current || !state.hasNextPage || state.isLoadingMore) return;
     isFetchingMore.current = true;
     loadData(state.currentPage + 1, false);
   }, [state.hasNextPage, state.isLoadingMore, state.currentPage, loadData]);
 
-  /* ── Bookmark handler ───────────────────────────────────────────────────── */
   const bookmarksRef = useRef(state.bookmarks);
   useEffect(() => { bookmarksRef.current = state.bookmarks; }, [state.bookmarks]);
 
-  // FIX 2: Keep a ref to toggleBookmark so handleBookmark (which is itself a
-  // stable ref) always calls the latest version of toggleBookmark — never a
-  // stale closure captured at mount time.
   const toggleBookmarkRef = useRef(toggleBookmark);
   useEffect(() => { toggleBookmarkRef.current = toggleBookmark; }, [toggleBookmark]);
 
@@ -371,12 +346,11 @@ export default function CoursesCatalog() {
       ? bookmarksRef.current.length - 1
       : bookmarksRef.current.length + 1;
 
-    await toggleBookmarkRef.current(courseId); // always calls the latest toggleBookmark
+    await toggleBookmarkRef.current(courseId);
 
     if (newCount >= 5) await scheduleBookmarkNotification(newCount);
   }).current;
 
-  /* ── Scroll to top ── */
   const handleScrollTop = useCallback(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
@@ -385,7 +359,6 @@ export default function CoursesCatalog() {
     Alert.alert('Notifications', 'You have no new notifications at this time.', [{ text: 'OK' }]);
   }, []);
 
-  /* ── Filtered list ── */
   const filteredCourses = useMemo(() => {
     if (!search.trim()) return state.courses;
     const q = search.toLowerCase();
@@ -400,10 +373,8 @@ export default function CoursesCatalog() {
   const firstName = getUserDisplayName(user);
   const showFeatured = !search && selectedCategory === 'All' && featuredCourses.length > 0;
 
-  /* ── keyExtractor ── */
   const keyExtractor = useCallback((item: Course) => item.id, []);
 
-  /* ── renderItem — stable; no longer depends on state.bookmarks ── */
   const renderItem = useCallback(({ item }: { item: Course }) => (
     <CourseItem
       course={item}
@@ -411,7 +382,6 @@ export default function CoursesCatalog() {
     />
   ), [handleBookmark]);
 
-  /* ── List header ── */
   const ListHeader = useMemo(() => (
     <View>
       <HeroSection
@@ -446,12 +416,10 @@ export default function CoursesCatalog() {
   ), [firstName, search, state.courses.length, state.bookmarks, showFeatured,
     featuredCourses, selectedCategory, filteredCourses.length, handleNotificationPress]);
 
-  /* ── Scroll-to-top opacity ── */
   const scrollTopOpacity = scrollY.interpolate({
     inputRange: [200, 300], outputRange: [0, 1], extrapolate: 'clamp',
   });
 
-  /* ── Loading state ── */
   if (state.isLoading && state.courses.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -472,7 +440,6 @@ export default function CoursesCatalog() {
     );
   }
 
-  /* ── Error state ── */
   if (state.error && state.courses.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -498,7 +465,6 @@ export default function CoursesCatalog() {
     );
   }
 
-  /* ── Main render ── */
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <StatusBar barStyle="light-content" backgroundColor={C.primary} translucent={false} />
@@ -555,7 +521,6 @@ export default function CoursesCatalog() {
         scrollEventThrottle={16}
       />
 
-      {/* ── Scroll-to-top FAB ── */}
       <Animated.View style={{
         position: 'absolute', bottom: 24, right: 18,
         opacity: scrollTopOpacity,

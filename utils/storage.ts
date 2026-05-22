@@ -1,8 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ─── Keys ─────────────────────────────────────────────────────────────────────
-
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
@@ -11,9 +9,6 @@ export const STORAGE_KEYS = {
   ENROLLED_COURSES: 'enrolled_courses',
   LAST_OPENED: 'last_opened_at',
 } as const;
-
-// ─── SecureStore ──────────────────────────────────────────────────────────────
-// For tokens + credentials only — backed by iOS Keychain / Android Keystore
 
 export const secureStorage = {
   async get(key: string): Promise<string | null> {
@@ -36,13 +31,9 @@ export const secureStorage = {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch {
-      // Already gone — safe to ignore
     }
   },
 };
-
-// ─── AsyncStorage ─────────────────────────────────────────────────────────────
-// For app data — bookmarks, course cache, preferences
 
 export const appStorage = {
   async get<T>(key: string): Promise<T | null> {
@@ -66,7 +57,6 @@ export const appStorage = {
     try {
       await AsyncStorage.removeItem(key);
     } catch {
-      // Silent fail
     }
   },
 
@@ -74,7 +64,6 @@ export const appStorage = {
     try {
       await AsyncStorage.clear();
     } catch {
-      // Silent fail
     }
   },
 };

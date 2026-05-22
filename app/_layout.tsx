@@ -5,22 +5,13 @@ import { View, ActivityIndicator } from 'react-native';
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { initializeNotifications } from '@/utils/notifications';
-import { usePreferencesStore } from '@/store/preferencesStore';   // ← NEW
+import { usePreferencesStore } from '@/store/preferencesStore';  
 
 function RootLayoutNav() {
   const { isLoading, isAuthenticated } = useAuth();
-
-  // ── NEW: pull loadPreferences action from the store ──────────────────────
-  // usePreferencesStore is a Zustand store — (s) => s.loadPreferences
-  // is a selector that grabs only the loadPreferences function.
-  // This avoids re-rendering this component when other preferences change.
   const loadPreferences = usePreferencesStore((s) => s.loadPreferences);
-
+  
   useEffect(() => {
-    // Runs once on app mount.
-    // Order matters:
-    //   1. loadPreferences first — so notification toggles are ready
-    //   2. initializeNotifications second — so it can read those toggles
     loadPreferences();
     initializeNotifications();
   }, []);

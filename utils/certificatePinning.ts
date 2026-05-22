@@ -26,7 +26,7 @@ export async function validateCertificate(serverCertHash: string): Promise<boole
 export function addCertificatePinning(apiClient: any) {
   apiClient.interceptors.request.use(async (config: any) => {
     config.sslPinning = {
-      certs: [Config.certFileName], // ✅ from env
+      certs: [Config.certFileName],
     };
     return config;
   });

@@ -1,4 +1,3 @@
-// app/course/webview.tsx
 import { useState, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity,
@@ -11,25 +10,23 @@ import NetInfo from '@react-native-community/netinfo';
 import React from 'react';
 
 const C = {
-  bg:        '#F5F7FF',
-  white:     '#FFFFFF',
-  primary:   '#6366f1',
+  bg: '#F5F7FF',
+  white: '#FFFFFF',
+  primary: '#6366f1',
   primaryLt: '#a5b4fc',
-  text:      '#1e1b4b',
-  muted:     '#9ca3af',
-  border:    '#e5e7eb',
-  danger:    '#ef4444',
+  text: '#1e1b4b',
+  muted: '#9ca3af',
+  border: '#e5e7eb',
+  danger: '#ef4444',
 };
 
-// ─── HTML Template ────────────────────────────────────────────────────────────
-
 function buildCourseHTML(
-  title:      string,
-  courseId:   string,
-  price:      string,
-  category:   string,
+  title: string,
+  courseId: string,
+  price: string,
+  category: string,
   instructor: string,
-  rating:     string,
+  rating: string,
 ): string {
   return `
     <!DOCTYPE html>
@@ -45,8 +42,6 @@ function buildCourseHTML(
           background: #F5F7FF; color: #1e1b4b;
           padding: 20px 16px 40px;
         }
-
-        /* ── Native-header banner (hidden until message received) ── */
         #native-banner {
           display: none;
           background: #ede9fe;
@@ -152,13 +147,6 @@ function buildCourseHTML(
     </head>
     <body>
 
-      <!--
-        NATIVE → WEBVIEW HEADER COMMUNICATION
-        This banner is hidden by default.
-        It becomes visible when the native app sends a 'COURSE_DATA' message
-        via injectJavaScript(), simulating HTTP request headers
-        (auth token, username, session expiry, etc.)
-      -->
       <div id="native-banner">
         <strong>📲 From Native App (headers):</strong>
         <span id="banner-text"></span>
@@ -222,13 +210,13 @@ function buildCourseHTML(
       <div class="card">
         <h2>Course Lessons</h2>
         ${[
-          { n: 1, title: 'Introduction & Overview',  dur: '12 min', done: true  },
-          { n: 2, title: 'Core Concepts',            dur: '28 min', done: true  },
-          { n: 3, title: 'Hands-on Practice',        dur: '35 min', done: false },
-          { n: 4, title: 'Advanced Techniques',      dur: '40 min', done: false },
-          { n: 5, title: 'Real-world Applications',  dur: '25 min', done: false },
-          { n: 6, title: 'Final Project',            dur: '30 min', done: false },
-        ].map(l => `
+      { n: 1, title: 'Introduction & Overview', dur: '12 min', done: true },
+      { n: 2, title: 'Core Concepts', dur: '28 min', done: true },
+      { n: 3, title: 'Hands-on Practice', dur: '35 min', done: false },
+      { n: 4, title: 'Advanced Techniques', dur: '40 min', done: false },
+      { n: 5, title: 'Real-world Applications', dur: '25 min', done: false },
+      { n: 6, title: 'Final Project', dur: '30 min', done: false },
+    ].map(l => `
           <div class="lesson" onclick="lessonTapped(${l.n}, '${l.title}')">
             <div class="lesson-num ${l.done ? 'done' : ''}">${l.done ? '✓' : l.n}</div>
             <div>
@@ -243,7 +231,6 @@ function buildCourseHTML(
       </button>
 
       <script>
-        // ── RECEIVE data from Native app (header-style communication) ──────────
         window.addEventListener('message', function(e) {
           try {
             var data = JSON.parse(e.data);
@@ -299,26 +286,24 @@ function buildCourseHTML(
   `;
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function WebViewScreen() {
   const {
     courseId, title, price, category,
     instructor, rating,
     username, tokenExpiry,
   } = useLocalSearchParams<{
-    courseId:    string;
-    title:       string;
-    price:       string;
-    category:    string;
-    instructor:  string;
-    rating:      string;
-    username:    string;
+    courseId: string;
+    title: string;
+    price: string;
+    category: string;
+    instructor: string;
+    rating: string;
+    username: string;
     tokenExpiry: string;
   }>();
 
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
+  const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isOffline, setIsOffline] = useState(false);
   const webViewRef = useRef<WebView>(null);
@@ -326,14 +311,13 @@ export default function WebViewScreen() {
   const courseTitle = title ?? 'Course Content';
   const htmlContent = buildCourseHTML(
     courseTitle,
-    courseId    ?? '',
-    price       ?? '0',
-    category    ?? 'General',
-    instructor  ?? 'Instructor',
-    rating      ?? '4.5',
+    courseId ?? '',
+    price ?? '0',
+    category ?? 'General',
+    instructor ?? 'Instructor',
+    rating ?? '4.5',
   );
 
-  // Check network status
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsOffline(!state.isConnected);
@@ -348,9 +332,9 @@ export default function WebViewScreen() {
     setLoading(false);
     setError(false);
 
-    const safeTitle    = courseTitle.replace(/'/g, "\\'");
-    const safeUsername = (username    ?? 'guest').replace(/'/g, "\\'");
-    const safeExpiry   = (tokenExpiry ?? 'N/A').replace(/'/g, "\\'");
+    const safeTitle = courseTitle.replace(/'/g, "\\'");
+    const safeUsername = (username ?? 'guest').replace(/'/g, "\\'");
+    const safeExpiry = (tokenExpiry ?? 'N/A').replace(/'/g, "\\'");
 
     webViewRef.current?.injectJavaScript(`
       window.dispatchEvent(new MessageEvent('message', {
@@ -366,7 +350,6 @@ export default function WebViewScreen() {
     `);
   };
 
-  // Enhanced error handling for WebView
   const handleWebViewError = (error: any) => {
     setError(true);
     setLoading(false);
@@ -380,7 +363,6 @@ export default function WebViewScreen() {
 
     setErrorMessage(message);
 
-    // Send error to WebView if it's loaded
     webViewRef.current?.injectJavaScript(`
       window.dispatchEvent(new MessageEvent('message', {
         data: JSON.stringify({
@@ -414,10 +396,6 @@ export default function WebViewScreen() {
     }
   };
 
-  // ── FIX: handleMessage moved inside the component and wrapped in useCallback
-  // so it can access component state, router, and hooks if needed in the future.
-  // Previously it was a standalone module-level function which meant it was
-  // frozen at definition time and could never read or update component state.
   const handleMessage = useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -440,9 +418,8 @@ export default function WebViewScreen() {
     } catch (error) {
       console.error('Error handling WebView message:', error);
     }
-  }, []); // stable — only uses Alert which never changes
+  }, []);
 
-  // Enhanced error state UI
   if (error) {
     return (
       <View style={styles.centered}>
@@ -511,7 +488,6 @@ export default function WebViewScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   centered: {

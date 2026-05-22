@@ -1,4 +1,3 @@
-// context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   getTokens, getUserData, getCurrentUser,
@@ -33,8 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLocalLoading(true);
       setLoading(true);
-
-      // Security check on auth (only in production)
       if (!Config.isDev) {
         const isCompromised = await securityManager.blockIfCompromised();
         if (isCompromised) {

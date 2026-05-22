@@ -20,7 +20,6 @@ interface RawProduct {
   images: string[];
 }
 
-// ─── Course images — using picsum with named seeds (always works, no auth) ────
 function getCourseImage(productId: number, category: string): string {
   const categorySeeds: Record<string, string> = {
     'mens-watches':       'wristwatch',
@@ -52,7 +51,6 @@ function getCourseImage(productId: number, category: string): string {
   return `https://picsum.photos/seed/${seed}${productId}/800/500`;
 }
 
-// ─── Retry utility with exponential backoff ───────────────────────────────────
 async function withRetry<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
@@ -63,12 +61,10 @@ async function withRetry<T>(
   
   for (let i = 0; i < maxRetries; i++) {
     try {
-      // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
       });
-      
-      // Race between the actual request and timeout
+
       return await Promise.race([fn(), timeoutPromise]) as T;
     } catch (error) {
       lastError = error as Error;
@@ -82,7 +78,6 @@ async function withRetry<T>(
   throw lastError!;
 }
 
-// ─── Builder ──────────────────────────────────────────────────────────────────
 function buildCourses(users: RawUser[], products: RawProduct[]): Course[] {
   return products.map((product, index) => {
     const user = users[index % users.length];
@@ -105,8 +100,6 @@ function buildCourses(users: RawUser[], products: RawProduct[]): Course[] {
     };
   });
 }
-
-// ─── Fetch with dynamic pagination ───────────────────────────────────────────
 
 export interface FetchCoursesOptions {
   page?: number;
@@ -139,7 +132,6 @@ export async function fetchCourses(
     limit: String(limit),
   });
 
-  // Use retry mechanism for API calls
   const [usersRes, productsRes] = await Promise.all([
     withRetry(() => 
       apiClient.get<ApiResponse<PaginatedData<RawUser>>>(
@@ -165,8 +157,6 @@ export async function fetchCourses(
     hasNextPage: meta.nextPage,
   };
 }
-
-// ─── Convenience wrapper ──────────────────────────────────────────────────────
 
 export async function fetchAllCourses(): Promise<Course[]> {
   const result = await fetchCourses({ page: 1, limit: 20 });

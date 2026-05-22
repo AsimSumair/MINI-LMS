@@ -1,12 +1,8 @@
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { AppState, Platform, Alert } from 'react-native';
-import { usePreferencesStore } from '@/store/preferencesStore';   // ← NEW
+import { usePreferencesStore } from '@/store/preferencesStore';  
 
-// ─── Safe import of expo-notifications ───────────────────────────────────────
-// expo-notifications crashes in Expo Go so we load it conditionally.
-// If it fails, notificationsAvailable stays false and every function
-// gracefully falls back to an in-app Alert instead.
 
 let Notifications: any = null;
 let notificationsAvailable = false;
@@ -27,15 +23,7 @@ try {
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
-// lastOpenedTime tracks when the app last came to foreground.
-// Used to decide whether 24 hours have passed.
 let lastOpenedTime = Date.now();
-
-// ─── Notification handler (what happens when a notification arrives) ──────────
-// shouldShowAlert  → show the notification banner
-// shouldPlaySound  → play the default sound
-// shouldSetBadge   → don't change the app icon badge number
-// shouldShowBanner → show it as a banner (iOS specific)
 
 if (notificationsAvailable && Notifications) {
   Notifications.setNotificationHandler({
@@ -48,12 +36,6 @@ if (notificationsAvailable && Notifications) {
   });
 }
 
-// ─── AppState listener ────────────────────────────────────────────────────────
-// AppState fires 'active' every time the user brings the app to the foreground.
-// We use it to:
-//   1. Update lastOpenedTime so the 24h gap calculation stays accurate
-//   2. Cancel any pending reminder because the user just opened the app
-
 if (notificationsAvailable && Notifications && !isExpoGo && Device.isDevice) {
   AppState.addEventListener('change', (nextAppState) => {
     if (nextAppState === 'active') {
@@ -62,11 +44,6 @@ if (notificationsAvailable && Notifications && !isExpoGo && Device.isDevice) {
     }
   });
 }
-
-// ─── 1. Request permission ────────────────────────────────────────────────────
-// Always call this before scheduling any notification.
-// Returns true  → permission granted, safe to proceed
-// Returns false → denied or unavailable, show fallback
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!notificationsAvailable || !Notifications) {
@@ -105,26 +82,14 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 }
 
-// ─── 2. Bookmark notification ─────────────────────────────────────────────────
-// Called from [id].tsx every time a user bookmarks a course.
-// Fires when count reaches 5 or more.
-//
-// NEW: reads notificationsEnabled + bookmarkNotifications from preferencesStore
-// using getState() — this is the Zustand way to read state OUTSIDE a component.
-// If the user has turned off bookmark notifications in settings, we skip silently.
 
 export async function scheduleBookmarkNotification(count: number): Promise<void> {
 
-  // ── NEW: check user preferences before doing anything ───────────────────
-  // getState() is a Zustand method — works outside React components.
-  // Inside a component you'd use the hook: usePreferencesStore(s => s.notificationsEnabled)
-  // Outside (like here in a utility file) you must use getState() instead.
   const { notificationsEnabled, bookmarkNotifications } =
     usePreferencesStore.getState();
 
   if (!notificationsEnabled || !bookmarkNotifications) {
     console.log('Bookmark notifications disabled by user — skipping');
-    // Still show in-app alert even if push notifications are off
     if (count >= 5) {
       Alert.alert(
         '🎉 Achievement Unlocked!',
@@ -135,7 +100,6 @@ export async function scheduleBookmarkNotification(count: number): Promise<void>
     return;
   }
 
-  // ── Expo Go / no notifications available → in-app alert fallback ─────────
   if (!notificationsAvailable || !Notifications) {
     console.log('Bookmark notification skipped - expo-notifications not available');
     if (count >= 5) {
@@ -160,7 +124,6 @@ export async function scheduleBookmarkNotification(count: number): Promise<void>
     return;
   }
 
-  // ── Real device + notifications available ─────────────────────────────────
   const granted = await requestNotificationPermission();
   if (!granted) {
     Alert.alert(
@@ -178,7 +141,7 @@ export async function scheduleBookmarkNotification(count: number): Promise<void>
         body:  `You've bookmarked ${count} courses! Keep up the great learning momentum!`,
         data:  { screen: 'Bookmarks', bookmarkCount: count },
       },
-      trigger: null,   // null = fire immediately
+      trigger: null,   
     });
     console.log(`✅ Bookmark notification sent for ${count} bookmarks`);
   } catch (error) {
@@ -191,16 +154,8 @@ export async function scheduleBookmarkNotification(count: number): Promise<void>
   }
 }
 
-// ─── 3. Schedule 24-hour reminder ────────────────────────────────────────────
-// Schedules a notification 24 hours in the future.
-// Called from initializeNotifications() on every app launch.
-// If the user opens the app again before 24h, cancel24hrReminder() wipes it.
-//
-// NEW: checks reminderNotifications preference before scheduling.
-
 export async function schedule24hrReminder(): Promise<void> {
 
-  // ── NEW: check user preferences ──────────────────────────────────────────
   const { notificationsEnabled, reminderNotifications } =
     usePreferencesStore.getState();
 
@@ -223,7 +178,6 @@ export async function schedule24hrReminder(): Promise<void> {
   if (!granted) return;
 
   try {
-    // Cancel any existing reminder first so we don't stack duplicates
     await cancel24hrReminder();
 
     await Notifications.scheduleNotificationAsync({
@@ -233,8 +187,8 @@ export async function schedule24hrReminder(): Promise<void> {
         data:  { screen: 'Home' },
       },
       trigger: {
-        seconds: 24 * 60 * 60,  // 24 hours in seconds
-        repeats: false,          // fire once, not on a repeat
+        seconds: 24 * 60 * 60, 
+        repeats: false,          
       },
     });
 
@@ -243,11 +197,6 @@ export async function schedule24hrReminder(): Promise<void> {
     console.error('Error scheduling 24-hour reminder:', error);
   }
 }
-
-// ─── 4. Cancel 24-hour reminder ──────────────────────────────────────────────
-// Finds any scheduled notification whose body contains our identifier text
-// and cancels it. Called when the app comes back to foreground (AppState listener
-// above) so a user who returns within 24h never sees a stale reminder.
 
 export async function cancel24hrReminder(): Promise<void> {
   if (!notificationsAvailable || !Notifications || isExpoGo || !Device.isDevice) return;
@@ -264,10 +213,6 @@ export async function cancel24hrReminder(): Promise<void> {
     console.error('Error canceling reminder:', error);
   }
 }
-
-// ─── 5. Initialize (called once on app launch from _layout.tsx) ───────────────
-// Entry point for the entire notification system.
-// loadPreferences() must run BEFORE this so getState() reads correct values.
 
 export async function initializeNotifications(): Promise<void> {
   if (!notificationsAvailable || !Notifications) {
@@ -290,8 +235,6 @@ export async function initializeNotifications(): Promise<void> {
     console.error('Error initializing notifications:', error);
   }
 }
-
-// ─── 6. Helper ────────────────────────────────────────────────────────────────
 
 export function areNotificationsAvailable(): boolean {
   return notificationsAvailable && !isExpoGo && Device.isDevice;

@@ -16,8 +16,6 @@ export interface LoginData {
   password: string;
 }
 
-// ─── Token Storage ────────────────────────────────────────────────────────────
-
 export const storeTokens = async (accessToken: string, refreshToken: string) => {
   try {
     await SecureStore.setItemAsync('accessToken', accessToken);
@@ -71,8 +69,6 @@ export const getUserData = async () => {
   }
 };
 
-// ─── Token Validation ─────────────────────────────────────────────────────────
-
 export const isTokenValid = async (): Promise<boolean> => {
   try {
     const { accessToken, tokenExpiry } = await getTokens();
@@ -82,10 +78,6 @@ export const isTokenValid = async (): Promise<boolean> => {
     return false;
   }
 };
-
-// ─── Refresh Access Token ─────────────────────────────────────────────────────
-// POST /api/v1/users/refresh-token
-// Sends the stored refreshToken → gets a new accessToken + refreshToken back
 
 export const refreshAccessToken = async (): Promise<boolean> => {
   try {
@@ -98,7 +90,7 @@ export const refreshAccessToken = async (): Promise<boolean> => {
 
     const response = await axios.post(
       `${API_BASE_URL}/users/refresh-token`,
-      {},  // empty body — token sent via Authorization header
+      {},  
       {
         headers: {
           Authorization: `Bearer ${refreshToken}`,
@@ -111,7 +103,6 @@ export const refreshAccessToken = async (): Promise<boolean> => {
     if (response.data.success && response.data.data?.accessToken) {
       const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
 
-      // Store both new tokens
       await storeTokens(newAccessToken, newRefreshToken);
       console.log('✅ Access token refreshed successfully');
       return true;
@@ -124,20 +115,15 @@ export const refreshAccessToken = async (): Promise<boolean> => {
   }
 };
 
-// ─── Get Valid Token (auto-refresh if expired) ────────────────────────────────
-// Use this instead of getTokens() anywhere you need a guaranteed valid token
-
 export const getValidAccessToken = async (): Promise<string | null> => {
   const { accessToken, tokenExpiry } = await getTokens();
 
   if (!accessToken) return null;
 
-  // Token still valid — return it directly
   if (tokenExpiry && parseInt(tokenExpiry) > Date.now()) {
     return accessToken;
   }
 
-  // Token expired — try to refresh
   console.log('⚠️ Access token expired, attempting refresh...');
   const refreshed = await refreshAccessToken();
 
@@ -145,12 +131,8 @@ export const getValidAccessToken = async (): Promise<string | null> => {
     const { accessToken: newToken } = await getTokens();
     return newToken;
   }
-
-  // Refresh also failed — user must log in again
   return null;
 };
-
-// ─── Auth API Calls ───────────────────────────────────────────────────────────
 
 export const registerUser = async (data: RegisterData) => {
   try {
@@ -210,7 +192,6 @@ export const loginUser = async (data: LoginData) => {
 
 export const getCurrentUser = async () => {
   try {
-    // ✅ Use getValidAccessToken — auto-refreshes if expired
     const accessToken = await getValidAccessToken();
 
     if (!accessToken) {

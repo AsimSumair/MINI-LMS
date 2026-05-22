@@ -14,9 +14,6 @@ const C = {
 
 export default function SecurityBlockScreen() {
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
-
-  // ✅ FIX: Generate reference ID once per mount, not on every render.
-  // Math.random() inside JSX causes a new ID on every re-render.
   const referenceId = useRef(Math.random().toString(36).substring(7));
 
   useEffect(() => {
@@ -24,7 +21,7 @@ export default function SecurityBlockScreen() {
   }, []);
 
   const loadSecurityStatus = async () => {
-    const status = await securityManager.getSecurityReport();
+    const status = await securityManager.performSecurityCheck();
     setSecurityStatus(status);
   };
 
@@ -32,11 +29,7 @@ export default function SecurityBlockScreen() {
     Linking.openURL('mailto:support@minilms.com?subject=Security%20Violation%20Report');
   };
 
-  const handleExitApp = () => {
-    // Force close the app.
-    // For Expo managed workflow, BackHandler.exitApp() works on Android.
-    // On iOS, apps cannot programmatically exit — show an instruction instead.
-  };
+  const handleExitApp = () => {};
 
   if (!securityStatus) return null;
 

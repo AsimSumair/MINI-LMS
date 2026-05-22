@@ -1,5 +1,3 @@
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-
 export interface User {
   _id: string;
   username: string;
@@ -22,15 +20,11 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-// ─── Auth Actions (for useReducer) ────────────────────────────────────────────
-
 export type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; tokens: AuthTokens } }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_USER'; payload: User };
-
-// ─── Courses ──────────────────────────────────────────────────────────────────
 
 export interface Instructor {
   id: string;
@@ -52,7 +46,6 @@ export interface Course {
   rating: number;
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {
   statusCode: number;
@@ -70,8 +63,6 @@ export interface PaginatedData<T> {
   previousPage: boolean;   
   nextPage: boolean; 
 }
-
-// ─── Forms ────────────────────────────────────────────────────────────────────
 
 export interface LoginForm {
   email: string;

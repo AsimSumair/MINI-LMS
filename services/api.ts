@@ -20,8 +20,6 @@ const apiClient: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ─── Request interceptor ──────────────────────────────────────────────────────
-
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const token = await secureStorage.get(STORAGE_KEYS.ACCESS_TOKEN);
@@ -33,15 +31,12 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─── Response interceptor ─────────────────────────────────────────────────────
-
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
 
   async (error) => {
     const config = error.config as RetryConfig;
 
-    // Token refresh on 401
     if (error.response?.status === 401 && !config._retryCount) {
       try {
         const refreshToken = await secureStorage.get(STORAGE_KEYS.REFRESH_TOKEN);
@@ -63,7 +58,6 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Retry on network errors / 5xx with exponential backoff
     const shouldRetry = !error.response || error.response.status >= 500;
     config._retryCount = config._retryCount ?? 0;
 
