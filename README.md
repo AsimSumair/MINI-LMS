@@ -13,8 +13,8 @@ A production-ready mobile Learning Management System built with React Native Exp
     <td align="center"><b>Course Detail</b></td>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/Login.jpeg" width="200"/></td>
-    <td><img src="assets/screenshots/Signup.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/login.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/signup.jpeg" width="200"/></td>
     <td><img src="assets/screenshots/Course_Details.jpeg" width="200"/></td>
   </tr>
   <tr>
