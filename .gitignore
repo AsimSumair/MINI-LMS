@@ -39,3 +39,18 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+# ─── Environment / Secrets ───────────────────────────────────
+.env
+.env.local
+.env.staging
+.env.production
+
+# Keep the example — it has no real secrets
+!.env.example
+
+# EAS build artifacts
+.eas/
+eas-build-*.json.env
+.env.local
+node_modules/
+package-lock.json
