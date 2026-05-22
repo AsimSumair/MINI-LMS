@@ -1,8 +1,7 @@
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { AppState, Platform, Alert } from 'react-native';
-import { usePreferencesStore } from '@/store/preferencesStore';  
-
+import { usePreferencesStore } from '@/store/preferencesStore';
 
 let Notifications: any = null;
 let notificationsAvailable = false;
@@ -23,8 +22,6 @@ try {
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
-let lastOpenedTime = Date.now();
-
 if (notificationsAvailable && Notifications) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -39,10 +36,13 @@ if (notificationsAvailable && Notifications) {
 if (notificationsAvailable && Notifications && !isExpoGo && Device.isDevice) {
   AppState.addEventListener('change', (nextAppState) => {
     if (nextAppState === 'active') {
-      lastOpenedTime = Date.now();
       cancel24hrReminder().catch(console.error);
     }
   });
+}
+
+export function areNotificationsAvailable(): boolean {
+  return notificationsAvailable && !isExpoGo && (Device.isDevice ?? false);
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -50,12 +50,10 @@ export async function requestNotificationPermission(): Promise<boolean> {
     console.log('Notifications not available');
     return false;
   }
-
   if (isExpoGo) {
     console.log('Notifications not supported in Expo Go');
     return false;
   }
-
   if (!Device.isDevice) {
     console.log('Notifications only work on physical devices');
     return false;
@@ -82,45 +80,26 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 }
 
-
 export async function scheduleBookmarkNotification(count: number): Promise<void> {
-
   const { notificationsEnabled, bookmarkNotifications } =
     usePreferencesStore.getState();
 
+  const achievementAlert = () =>
+    Alert.alert(
+      '🎉 Achievement Unlocked!',
+      `You've bookmarked ${count} courses! Keep up the great learning momentum!`,
+      [{ text: 'Awesome!', style: 'default' }]
+    );
+
   if (!notificationsEnabled || !bookmarkNotifications) {
     console.log('Bookmark notifications disabled by user — skipping');
-    if (count >= 5) {
-      Alert.alert(
-        '🎉 Achievement Unlocked!',
-        `You've bookmarked ${count} courses! Keep up the great learning momentum!`,
-        [{ text: 'Awesome!', style: 'default' }]
-      );
-    }
+    if (count >= 5) achievementAlert();
     return;
   }
 
-  if (!notificationsAvailable || !Notifications) {
-    console.log('Bookmark notification skipped - expo-notifications not available');
-    if (count >= 5) {
-      Alert.alert(
-        '🎉 Achievement Unlocked!',
-        `You've bookmarked ${count} courses! Keep up the great learning momentum!`,
-        [{ text: 'Awesome!', style: 'default' }]
-      );
-    }
-    return;
-  }
-
-  if (isExpoGo || !Device.isDevice) {
-    console.log('Bookmark notification skipped - not available in Expo Go');
-    if (count >= 5) {
-      Alert.alert(
-        '🎉 Achievement Unlocked!',
-        `You've bookmarked ${count} courses! Keep learning!`,
-        [{ text: 'Great!', style: 'default' }]
-      );
-    }
+  if (!notificationsAvailable || !Notifications || isExpoGo || !Device.isDevice) {
+    console.log('Bookmark notification skipped - not available in this environment');
+    if (count >= 5) achievementAlert();
     return;
   }
 
@@ -141,21 +120,16 @@ export async function scheduleBookmarkNotification(count: number): Promise<void>
         body:  `You've bookmarked ${count} courses! Keep up the great learning momentum!`,
         data:  { screen: 'Bookmarks', bookmarkCount: count },
       },
-      trigger: null,   
+      trigger: null,
     });
     console.log(`✅ Bookmark notification sent for ${count} bookmarks`);
   } catch (error) {
     console.error('Error scheduling bookmark notification:', error);
-    Alert.alert(
-      '🎉 Achievement Unlocked!',
-      `You've bookmarked ${count} courses! Great progress!`,
-      [{ text: 'Thanks!', style: 'default' }]
-    );
+    achievementAlert();
   }
 }
 
 export async function schedule24hrReminder(): Promise<void> {
-
   const { notificationsEnabled, reminderNotifications } =
     usePreferencesStore.getState();
 
@@ -163,12 +137,10 @@ export async function schedule24hrReminder(): Promise<void> {
     console.log('Reminder notifications disabled by user — skipping');
     return;
   }
-
   if (!notificationsAvailable || !Notifications) {
     console.log('24-hour reminder skipped - expo-notifications not available');
     return;
   }
-
   if (isExpoGo || !Device.isDevice) {
     console.log('24-hour reminder skipped - not available in Expo Go');
     return;
@@ -187,8 +159,10 @@ export async function schedule24hrReminder(): Promise<void> {
         data:  { screen: 'Home' },
       },
       trigger: {
-        seconds: 24 * 60 * 60, 
-        repeats: false,          
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 24 * 60 * 60,
+        repeats: false,
+        channelId: 'default',
       },
     });
 
@@ -217,25 +191,30 @@ export async function cancel24hrReminder(): Promise<void> {
 export async function initializeNotifications(): Promise<void> {
   if (!notificationsAvailable || !Notifications) {
     console.log('Notifications not initialized - expo-notifications not available');
-    console.log('To enable: npx expo run:android or npx expo run:ios');
+    console.log('Tip: run `npx expo run:android` or `npx expo run:ios` for a dev build');
     return;
   }
-
   if (isExpoGo || !Device.isDevice) {
     console.log('Notifications not initialized - Expo Go or emulator detected');
-    console.log('Tip: Notifications only work in standalone builds');
+    console.log('Tip: Notifications only work in standalone / dev-client builds');
     return;
   }
 
   try {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+      console.log('✅ Android notification channel "default" registered');
+    }
+
     await requestNotificationPermission();
     await schedule24hrReminder();
     console.log('✅ Notifications initialized successfully');
   } catch (error) {
     console.error('Error initializing notifications:', error);
   }
-}
-
-export function areNotificationsAvailable(): boolean {
-  return notificationsAvailable && !isExpoGo && Device.isDevice;
 }
