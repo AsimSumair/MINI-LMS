@@ -6,9 +6,28 @@ A production-ready mobile Learning Management System built with React Native Exp
 
 ## Screenshots
 
-| Login | Home | Course Detail | Bookmarks | Profile |
-|-------|------|---------------|-----------|---------|
-| _(add screenshot)_ | _(add screenshot)_ | _(add screenshot)_ | _(add screenshot)_ | _(add screenshot)_ |
+<table>
+  <tr>
+    <td align="center"><b>Login</b></td>
+    <td align="center"><b>Register</b></td>
+    <td align="center"><b>Course Detail</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/Login.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/Signup.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/Course_Details.jpeg" width="200"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Bookmarks</b></td>
+    <td align="center"><b>Profile</b></td>
+    <td align="center"><b>Home</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/Bookmarks.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/Profile.jpeg" width="200"/></td>
+    <td><img src="assets/screenshots/Home.jpeg" width="200"/></td>
+  </tr>
+</table>
 
 ---
 
@@ -159,7 +178,7 @@ CERT_PIN_HASH_BACKUP=your_backup_cert_pin_hash_here
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/mini-lms.git
+git clone https://github.com/AsimSumair/MINI-LMS.git
 cd mini-lms
 
 # 2. Install dependencies
@@ -249,11 +268,6 @@ Base URL: `https://api.freeapi.app`
 
 ---
 
-## Demo Video
-
-_(Add link to 3–5 minute walkthrough video)_
-
----
 
 ## Author
 
